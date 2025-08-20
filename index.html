@@ -1,0 +1,630 @@
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="person.js"></script>
+  <title>Elevator Game</title>
+</head>
+
+<style>
+
+  body{
+    overflow: hidden;
+  }
+
+  .container {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+}
+
+.container div{
+  height: 100%;
+}
+
+.div1{
+  padding: 20px;
+  width: 40%;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.div2 {
+  width: 15%;
+  padding: 0;
+  margin: 0;
+  border-right: none !important;
+}
+
+.div3 {
+  width: 30%;
+  padding: 0;
+  margin: 0px;
+  border-left: none !important;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+
+body{
+  background-color: #87CEEB;
+}
+
+
+.door{
+  background-color: white;
+  height: 100% !important;
+  width: 50%;
+  margin: auto;
+  z-index: 1001;
+}
+
+.elevator-shaft {
+  position: relative;
+  width: 100%;
+  background-color: #1a1a1a;
+  overflow: hidden;
+  border: 2px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.elevator {
+  position: absolute;
+  bottom: 0;
+  transition: transform 1s ease-in-out;
+  background-color: #424242;
+  height: 100px !important;
+  width: 100px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 auto;
+  z-index: 1000;
+}
+
+.floor-line {
+  position: absolute;
+  width: 150%;
+  height: 2px;
+  z-index: 2;
+  pointer-events: none;
+  border-bottom: 1px solid grey;
+}
+
+#controls{
+  display: inline-block;
+}
+
+#controls button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f0f0f0, #cacaca);
+  box-shadow: 5px 5px 10px #b8b8b8, -5px -5px 10px #ffffff;
+  border: none;
+  margin: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+#controls button:hover {
+  background: linear-gradient(145deg, #cacaca, #f0f0f0);
+}
+
+#controls button:active {
+  box-shadow: inset 3px 3px 6px #b8b8b8, inset -3px -3px 6px #ffffff;
+  transform: scale(0.97);
+}
+
+/* For up/down arrows */
+#controls button.up::after {
+  content: "↑";
+}
+
+#controls button.down::after {
+  content: "↓";
+}
+
+/* For floor numbers */
+#controls button.floor {
+  background: linear-gradient(145deg, #f0f0f0, #cacaca);
+}
+
+/* Emergency button */
+#controls button.emergency {
+  background: linear-gradient(145deg, #ff5252, #d32f2f);
+  color: white;
+}
+
+
+#controls button :disabled {
+  background: linear-gradient(145deg, #f0f0f0, #cacaca);
+  cursor: not-allowed;
+}
+
+
+label{
+  font-size: large;
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid black;
+  padding: 20px;
+  z-index: 10000;
+  display: none;
+  width: 60%;
+  max-width: 500px;
+  height: auto;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  display: none;
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.person-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: 20px; /* Adds spacing between the person and the info */
+}
+
+.info-container {
+  flex: 2;
+  max-width: 60%;
+}
+
+#personok {
+  margin-top: 20px;
+}
+
+.simple-person {
+  width: 100%;
+  height: auto;
+}
+
+.info-container button{
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 5px 10px;
+}
+
+.info-container button:hover {
+  background-color: #45a049;
+}
+
+</style>
+
+<body>
+
+  <div id="personpop" class="popup container">
+    <div class="popup-content">
+      <div class="person-container">
+        <simple-person id="displayperson"></simple-person>
+      </div>
+      <div class="info-container">
+        <h3 style="margin-bottom: 0 !important;">Employee Card</h3>
+        <label id="personname"></label><br>
+        <label id="persondept"></label><br>
+        <label id="persondob"></label><br>
+        <label id="personfloor"></label><br>
+        <label id="personemail"></label>
+        <button id="personok" style="width: 100% !important" onclick="document.getElementById('personpop').style.display = 'none';">OK</button>
+      </div>
+    </div>
+  </div>
+  
+
+  <div class="container">
+    <div class="div1">
+      <label disabled id="goto">Target: <label id="goton">...</label></label>
+      <label disabled id="score">Score: 0</label>
+<div style="text-align: center; margin-top: 20px;overflow: scroll !important;" id="controls">
+  <button onclick="moveElevatorUp()" class="up"></button>
+  <button onclick="moveElevatorDown()" class="down"></button>
+  <button onclick="shiftDown ? confirm('Are you sure you want to reset the game?') ? (localStorage.clear(), alert('Reset game!'), location.reload()) : null : moveElevatorTo0()" id="lobbyb">L</button>
+
+  <br><br>
+</div>
+    </div>
+
+    <div class="div2">
+      <div class="elevator-shaft" id="elevator-shaft">
+        <div class="elevator" id="elevator">
+          <div class="door" id="door-left"></div>
+          <div class="door" id="door-right"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="div3 elevator-shaft" style="background-color: white;">
+   
+    </div>
+  </div>
+
+
+  <script>
+
+const doorL = document.getElementById("door-left");
+const doorR = document.getElementById("door-right");
+
+let doorsOpen = false;
+
+document.getElementById('score').innerText = `Score: ${localStorage.getItem('score') || 0}`;
+
+const elevator = document.getElementById("elevator");
+const shaft = document.getElementById("elevator-shaft");
+
+let maxFloorsInital = Math.floor(parseInt(localStorage.getItem('score'))/10) + 6 || 0;
+
+console.log('maxFloorsInital', maxFloorsInital)
+
+let currentFloor = 0;
+let maxFloors = maxFloorsInital >= 5 ? maxFloorsInital : 5;
+
+const incrementScore = (neg) => {
+  const score = parseInt(localStorage.getItem('score')) || 0;
+  localStorage.setItem('score', score + (neg ? -1 : 1));
+  document.getElementById('score').innerText = `Score: ${localStorage.getItem('score')}`;
+
+  if(score + 1 % 10 == 0) {
+    maxFloors++;
+    renderFloors()
+  }
+}
+
+
+console.log('maxFloors', maxFloors)
+
+let maxPeople = 10;
+const shaftHeight = shaft.offsetHeight;
+const floorHeight = shaftHeight / maxFloors;
+
+let lastFloor = currentFloor;
+
+let currPerson = null;
+
+let shiftDown = false;
+
+async function toggleDoors() {
+  doorL.style.transition = "all 0.5s ease-in-out";
+  doorR.style.transition = "all 0.5s ease-in-out";
+  
+
+  if (!doorsOpen) {
+    // Open doors
+    doorL.style.transform = "translateX(-100%)";
+    doorR.style.transform = "translateX(100%)";
+
+    if (currentFloor == 0) {
+    const div3 = document.querySelector('.div3');
+    const persons = div3.querySelectorAll('simple-person');
+    const firstPerson = persons.item(0);
+    console.log('first person', firstPerson)
+    console.log('persons', persons)
+    if (firstPerson) {
+      // Remove the first person
+      div3.removeChild(firstPerson);
+
+      const isTrickPerson = Math.random() < 0.5;
+
+      document.getElementById('goton').innerText = isTrickPerson ? Math.floor(Math.random()*maxFloors) : firstPerson.getAttribute('floor');
+
+      if(isTrickPerson && currPerson) currPerson.setAttribute('trick', 'true')
+
+        currPerson = firstPerson;
+
+      // Animate the remaining persons
+      persons.forEach((person, index) => {
+        if (index > 0) {
+          person.style.transition = "left 0.5s ease-in-out";
+          const currentLeft = parseFloat(person.style.left);
+          person.style.left = `${currentLeft - (floorHeight + 5)}px`;
+        }
+
+      });
+    }else{
+      // No persons to remove
+      console.log('no persons to remove');
+    }
+  }else if(currentFloor == parseInt(currPerson.getAttribute('floor'))){
+    console.log('correct floor')
+    const div3 = document.querySelector('.div3');
+    const person = document.createElement("simple-person");
+    person.style.position = "absolute";
+    person.style.bottom = `${currentFloor * (floorHeight)}px`; 
+    person.style.left = `${Math.floor(Math.random() * (div3.offsetWidth - floorHeight))}px`;
+    person.setAttribute('size', floorHeight);
+    person.setAttribute('floor', currentFloor);
+    person.setAttribute('shirt-color', currPerson.getAttribute('shirt-color'));
+    person.setAttribute('pants-color', currPerson.getAttribute('pants-color'));
+    person.setAttribute('skin-color', currPerson.getAttribute('skin-color'));
+    person.setAttribute('dob', currPerson.getAttribute('dob'));
+    person.setAttribute('name', currPerson.getAttribute('name'));
+    incrementScore()
+    person.onclick = () => {
+      alertPerson(person);
+    }
+   div3.appendChild(person);
+   currPerson = null
+  }else{
+    console.log('wrong floor', currentFloor, parseInt(document.getElementById('goton').innerText))
+    alert(
+  currPerson.getAttribute('name') + 
+  ' is on the wrong floor! (-1 point)\n' +
+  'Currently on floor ' + currentFloor + 
+  ', but should be on floor ' + parseInt(currPerson.getAttribute('floor')) + 
+  (currPerson.getAttribute('trick') ? ' (was trying a trick)' : '')
+);
+
+    currPerson = null
+    incrementScore(true)
+    await wait(3000);
+    moveElevatorTo0()
+  }
+
+  } else {
+    doorL.style.transform = "translateX(0)";
+    doorR.style.transform = "translateX(0)";
+  }
+
+
+
+  doorsOpen = !doorsOpen;
+}
+
+
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+let moving = false;
+
+const departments = [
+    "Accounting", "Human Resources", "Marketing", "Sales", "Research and Development",
+    "Customer Service", "Legal", "Finance", "IT", "Operations", "Supply Chain", "Product Management",
+    "Business Development", "Public Relations", "Corporate Communications", "Administration", "Facilities Management",
+    "Compliance", "Risk Management", "Data Analytics", "Quality Assurance", "Procurement", "Legal Affairs",
+    "Corporate Strategy", "Learning and Development", "Creative Services", "Brand Management", "Customer Support",
+    "Sustainability", "Investor Relations", "Logistics", "Event Management", "Training", "Employee Relations",
+    "Product Marketing", "Social Media", "Content Marketing", "Talent Acquisition", "Government Relations",
+    "Partnerships", "Technology", "Innovation", "Cybersecurity", "Compliance & Ethics", "Strategic Alliances",
+    "Corporate Governance", "Health and Safety", "Facilities Planning", "Inventory Management", "Legal Compliance",
+    "Product Design", "Engineering", "Technical Support", "Cloud Services", "Network Infrastructure", 
+    "Business Intelligence", "UX/UI Design", "Customer Engagement", "Merchandising", "Real Estate", "Business Analysis",
+    "Executive Leadership", "Field Operations", "Brand Strategy", "Mobile Development", "Digital Transformation",
+    "Environmental Affairs", "Internal Communications", "Training and Development", "Corporate Social Responsibility",
+    "Government Affairs", "Security", "Accounting Operations", "Procurement Management", "Performance Marketing",
+    "Business Systems", "Product Development", "Data Science", "Global Expansion", "Customer Experience",
+    "Client Services", "Sales Operations", "Product Support", "Financial Planning", "Audit", "Advertising",
+    "Website Development", "Mobile Solutions", "Enterprise Solutions", "Marketing Operations", "Data Privacy",
+    "Knowledge Management", "Cloud Solutions", "Market Research", "Product Innovation", "Vendor Relations",
+    "Healthcare Services", "Brand Communications", "Internal Audit", "Business Continuity", "Public Affairs"
+]
+
+// Create visual floor lines
+const renderFloors = async () => {
+
+const req = await fetch('https://randomuser.me/api/?nat=us,ca&inc=name,gender,dob&results=' + maxFloors+5);
+const { results } = await req.json()
+
+const randFN = () => {
+  const { name, gender } = results[Math.floor(Math.random() * results.length)];
+  return {
+    name: name.first,
+    gender
+  }
+}
+
+console.log('randFN', randFN())
+
+const randLN = () => results.map((r) => r.name.last).sort(() => Math.random() - 0.5)
+
+const alertPerson = (person) => {
+  const name = person.getAttribute('name');
+  const floor = person.getAttribute('floor');
+  const dob = person.getAttribute('dob');
+  const email = (name.split(' ')[0].toLowerCase().substring(0,2) + name.split(' ')[1].toLowerCase()).substring(0,10) + '@company.com';
+  document.getElementById('personname').innerText = `Name: ${name} (${person.getAttribute('gender').substring(0,1).toUpperCase()})`;
+  document.getElementById('personfloor').innerText = `Floor: ${floor}`;
+  document.getElementById('persondob').innerText = `DOB: ${new Date(dob).toLocaleDateString()}`;
+  document.getElementById('personemail').innerText = `Email: ${email}`;
+  document.getElementById('persondept').innerText = `Dept: ${person.getAttribute('dept')}`;
+  document.getElementById('displayperson').setAttribute('skin-color', person.getAttribute('skin-color'));
+  document.getElementById('displayperson').setAttribute('shirt-color', person.getAttribute('shirt-color'));
+  document.getElementById('displayperson').setAttribute('pants-color', person.getAttribute('pants-color'));
+  document.getElementById('displayperson').render();
+  document.getElementById('personpop').style.display = 'flex';
+}
+
+for (let i = 1; i < maxFloors; i++) {
+  const line = document.createElement("div");
+  line.classList.add("floor-line");
+  line.style.bottom = `${i * floorHeight}px`;
+  shaft.appendChild(line);
+  const floorButton = document.createElement("button");
+  floorButton.addEventListener("click", async () => {
+    if(moving) return
+    if (currentFloor !== i) {
+      moving = true;
+      if (doorsOpen) {
+        toggleDoors();
+        await wait(1500);
+      }
+      currentFloor = i;
+      elevator.style.transition = `transform ${Math.abs(i - lastFloor)}s ease-in-out`;
+      elevator.style.transform = `translateY(-${currentFloor * floorHeight}px)`;
+      await wait(Math.abs(i - lastFloor) * 1000);
+      lastFloor = currentFloor;
+      toggleDoors()
+      await wait(3000);
+      toggleDoors();
+      moving = false;
+    }    
+  });
+  floorButton.innerText = `${i}`;
+  document.getElementById('controls').appendChild(floorButton);
+
+
+      const div3 = document.querySelector('.div3');
+    const line2 = document.createElement("div");
+  line2.classList.add("floor-line");
+  line2.style.bottom = `${i * floorHeight}px`;
+  div3.appendChild(line2);
+
+
+}
+// make the elevator the same height as the floors
+elevator.style.setProperty('height', `${floorHeight}px`, 'important');
+elevator.style.setProperty('width', `${floorHeight}px`, 'important');
+
+
+for(let i = 0; i < maxPeople; i++){
+  const div3 = document.querySelector('.div3');
+  const person = document.createElement("simple-person");
+  person.style.position = "absolute";
+  person.style.bottom = "0";
+  person.style.left = `${i * (floorHeight + 5)}px`;
+  person.setAttribute('size', floorHeight);
+  let randFloor = Math.floor(Math.random() * maxFloors);
+  person.setAttribute('floor', randFloor > 1 ? randFloor : 1);
+  person.setAttribute('shirt-color', `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
+  person.setAttribute('pants-color', `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
+  person.setAttribute('dob', `${results[i].dob.date}`);
+  person.setAttribute('dept', departments[Math.floor(Math.random() * maxFloors)]);
+  person.setAttribute('skin-color', [
+  "#FFDFC4",  // very light
+  "#F0D5BE",  // light
+  "#E1B899",  // light-medium
+  "#D1A17A",  // medium
+  "#B97C6D",  // medium-deep
+  "#A25D46",  // deep
+  "#8A4B32",  // deeper
+  "#6F3C2A",  // very deep
+  "#5B2C1B",  // very deep with cool undertone
+  "#3F1B0B"   // deepest
+][Math.floor(Math.random() * 9)]
+  )
+  const fn = randFN()
+  person.setAttribute('name', `${fn.name} ${randLN()[i]}`);
+  person.setAttribute('gender', fn.gender)
+  div3.appendChild(person);
+
+  person.onclick = () => {
+    alertPerson(person);
+  }
+}
+
+}
+
+renderFloors()
+
+// Elevator controls
+async function moveElevatorUp() {
+  if(moving) return
+  if(doorsOpen){
+    toggleDoors()
+    await wait(1500)
+  }
+  if (currentFloor < maxFloors - 1) {
+    currentFloor++;
+    moving = true;
+    lastFloor = currentFloor;
+    elevator.style.transition = "transform 1s ease-in-out";
+    elevator.style.transform = `translateY(-${currentFloor * floorHeight}px)`;
+    await wait(1000);
+    toggleDoors()
+    await wait(3000);
+    toggleDoors();
+    moving = false;
+  }
+}
+
+async function moveElevatorDown() {
+  if(moving) return
+  if(doorsOpen) {
+    toggleDoors()
+    await wait(1500)
+  }
+  if (currentFloor > 0) {
+    currentFloor--;
+    moving = true;
+    lastFloor = currentFloor;
+    elevator.style.transition = "transform 1s ease-in-out";
+    elevator.style.transform = `translateY(-${currentFloor * floorHeight}px)`;
+    await wait(1000);
+    toggleDoors()
+    await wait(3000);
+    toggleDoors();
+    moving = false;
+  }
+}
+
+async function moveElevatorTo0() {
+  if(moving) return
+  if(doorsOpen) {
+    toggleDoors()
+    await wait(1500)
+  }
+  if (currentFloor !== 0) {
+    currentFloor = 0;
+    moving = true;
+    elevator.style.transition = "transform 1s ease-in-out";
+    elevator.style.transform = `translateY(-${currentFloor * floorHeight}px)`;
+    lastFloor = currentFloor;
+    await wait(1000);
+    toggleDoors()
+    await wait(3000);
+    toggleDoors();
+    moving = false;
+  }
+}
+
+window.onload = async () => { await wait(1500); toggleDoors() }
+
+document.addEventListener('keydown', (event) => {
+      if (event.key === 'Shift') {
+       document.getElementById('lobbyb').innerHTML = 'R';
+        shiftDown = true;
+      }
+})
+
+document.addEventListener('keyup', (event) => {
+  if (event.key === 'Shift') {
+       document.getElementById('lobbyb').innerHTML = 'L';
+    shiftDown = false;
+  }
+})
+
+  </script>
